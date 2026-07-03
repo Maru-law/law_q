@@ -2,171 +2,70 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>law_quiz</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<div id="app">
-
-  <!-- ローディング -->
-  <div id="loading-view" class="view active">
-    <p>データを読み込んでいます...</p>
-    <div class="spinner"></div>
-  </div>
-
-  <!-- 一覧画面 -->
-  <div id="list-view" class="view">
-
-    <header>
-      <h1>問題カテゴリ一覧</h1>
-    </header>
-
-    <div class="filter-card">
-
-      <h2 class="filter-title">
-        誤答フィルタ
-      </h2>
-
-      <div id="filter-buttons">
-
-        <button
-          class="filter-btn active"
-          data-filter="0">
-          全問題
-        </button>
-
-        <button
-          class="filter-btn"
-          data-filter="1">
-          誤答1回以上
-        </button>
-
-        <button
-          class="filter-btn"
-          data-filter="3">
-          誤答3回以上
-        </button>
-
-        <button
-          class="filter-btn"
-          data-filter="5">
-          誤答5回以上
-        </button>
-
-      </div>
-
-      <p class="filter-description">
-        選択した誤答回数以上の問題だけを出題します
-      </p>
-
+  <div id="app">
+    <div id="loading-view" class="view active">
+      <p>データを読み込んでいます...</p>
+      <div class="spinner"></div>
     </div>
 
-    <div id="category-container"></div>
-
-  </div>
-
-  <!-- クイズ画面 -->
-  <div id="quiz-view" class="view">
-
-    <div id="quiz-scroll-area">
-
+    <div id="list-view" class="view">
       <header>
+        <h1>問題カテゴリ</h1>
+        <div class="filter-container">
+          <label for="incorrect-filter">絞り込み:</label>
+          <select id="incorrect-filter">
+            <!-- JSで動的に追加されます -->
+          </select>
+        </div>
+      </header>
+      <div id="category-container"></div>
+    </div>
 
-        <h2 id="current-section-title">
-          <span class="accent-bar"></span>
-          <span id="section-name-text"></span>
-        </h2>
-
-        <div class="header-right">
-
-          <div class="quiz-stats">
-
+    <div id="quiz-view" class="view">
+      <div id="quiz-scroll-area">
+        <header>
+          <h2 id="current-section-title"><span class="accent-bar"></span><span id="section-name-text"></span></h2>
+          <div class="header-right">
             <p id="progress-text"></p>
-
-            <p id="filtered-count-text"></p>
-
+            <input type="checkbox" id="review-checkbox" class="hidden">
+          </div>
+        </header>
+        
+        <div id="quiz-content">
+          <div class="card question-card">
+            <div class="q-header">
+              <h3 class="question-number">問題 <span id="q-num"></span></h3>
+              <span id="q-incorrect-badge" class="badge hidden"></span>
+            </div>
+            <p id="question-text"></p>
           </div>
 
-          <input
-            type="checkbox"
-            id="review-checkbox"
-            class="hidden">
-
+          <div id="result-card" class="card hidden">
+            <h3 id="result-title"></h3>
+            <p id="explanation-text"></p>
+          </div>
         </div>
-
-      </header>
-
-      <div id="quiz-content">
-
-        <div class="card question-card">
-
-          <h3 class="question-number">
-            問題
-            <span id="q-num"></span>
-          </h3>
-
-          <p id="question-text"></p>
-
-        </div>
-
-        <div id="result-card"
-             class="card hidden">
-
-          <h3 id="result-title"></h3>
-
-          <p id="explanation-text"></p>
-
-        </div>
-
       </div>
 
+      <div id="bottom-controls">
+        <div id="action-buttons" class="hidden">
+          <button id="btn-back-list" class="btn-secondary">問題一覧へ</button>
+          <button id="btn-next-question" class="btn-primary">次の問題へ</button>
+        </div>
+
+        <div id="answer-buttons">
+          <button id="btn-true" class="answer-btn btn-o">〇</button>
+          <button id="btn-false" class="answer-btn btn-x">×</button>
+        </div>
+      </div>
     </div>
-
-    <div id="bottom-controls">
-
-      <div id="action-buttons" class="hidden">
-
-        <button
-          id="btn-back-list"
-          class="btn-secondary">
-          問題一覧へ
-        </button>
-
-        <button
-          id="btn-next-question"
-          class="btn-primary">
-          次の問題へ
-        </button>
-
-      </div>
-
-      <div id="answer-buttons">
-
-        <button
-          id="btn-true"
-          class="answer-btn btn-o">
-          〇
-        </button>
-
-        <button
-          id="btn-false"
-          class="answer-btn btn-x">
-          ×
-        </button>
-
-      </div>
-
-    </div>
-
   </div>
 
-</div>
-
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 </body>
-
 </html>
