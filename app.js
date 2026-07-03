@@ -1,5 +1,5 @@
 // ↓GASのウェブアプリURLを再設定してください
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby71xzQ4WDcpNDh677BY5hZdNeiM8Y3kpo4w-2jZA81tUyFmGvr2lqIZ6DDPcSoylWFZw/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFoCjDdLK2duXq8Hav_rjYHp6J8oFVkNvhZY914oDe-tQuC2BUqAlHEOe1qRUpzQdMSw/exec';
 
 let allQuestions = [];
 let maxIncorrect = 0;
