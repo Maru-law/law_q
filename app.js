@@ -10,9 +10,8 @@ let currentQuestion = null;
 let isShowingTrue = true;
 let totalSectionQuestions = 0;
 
-// 通信最適化のためのキュー（溜め込んで一気に送信する）
-let pendingChecks = {}; // { id: boolean }
-let pendingLogs = [];   // [ { id, isCorrect } ]
+let pendingChecks = {}; 
+let pendingLogs = [];   
 let syncTimeout = null;
 
 const views = {
@@ -23,7 +22,6 @@ const views = {
 
 document.addEventListener('DOMContentLoaded', initApp);
 
-// スマホでブラウザを閉じた時や裏に回した時に確実に通信を行う（ストレスフリー設計）
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') syncUpdates();
 });
@@ -41,9 +39,11 @@ async function initApp() {
       else throw new Error("不正なデータ形式です。");
     }
 
-    allQuestions = fetchedData;
+    allQuestions = fetchedData.map(q => ({
+      ...q,
+      incorrectCount: Number(q.incorrectCount) || 0
+    }));
     
-    // 誤答数の最大値を計算し、フィルターの選択肢を構築
     maxIncorrect = Math.max(...allQuestions.map(q => q.incorrectCount), 0);
     buildFilterUI();
     
@@ -80,7 +80,6 @@ function renderList() {
   const container = document.getElementById('category-container');
   container.innerHTML = '';
   
-  // フィルター処理
   const filteredQuestions = allQuestions.filter(q => q.incorrectCount >= currentFilter);
   
   if (filteredQuestions.length === 0) {
@@ -88,7 +87,6 @@ function renderList() {
     return;
   }
 
-  // カテゴリ・年ごとにグループ化
   const groupedSections = {};
   filteredQuestions.forEach(q => {
     if (!q.section) return;
@@ -101,7 +99,6 @@ function renderList() {
     groupedSections[category][year].push(q);
   });
 
-  // DOM生成
   for (const [category, yearsObj] of Object.entries(groupedSections)) {
     const groupDiv = document.createElement('div');
     groupDiv.className = 'category-group';
@@ -113,7 +110,8 @@ function renderList() {
     for (const [year, questions] of Object.entries(yearsObj)) {
       const btn = document.createElement('button');
       btn.className = 'year-btn';
-      btn.textContent = `${year} (${questions.length}問)`;
+      // ここを修正し、問題数を表示しないように変更しました
+      btn.textContent = year;
       btn.onclick = () => startQuiz(category, year, questions);
       grid.appendChild(btn);
     }
@@ -139,9 +137,9 @@ function parseMarkdown(text) {
 
 function loadNextQuestion() {
   if (currentSectionData.length === 0) {
-    syncUpdates(); // 確実に送信
+    syncUpdates(); 
     alert('このセクションをクリアしました！');
-    renderList(); // 誤答数が変化している可能性があるため再描画
+    renderList(); 
     switchView('list');
     return;
   }
@@ -152,7 +150,6 @@ function loadNextQuestion() {
   document.getElementById('q-num').textContent = currentQuestionIndex;
   document.getElementById('progress-text').textContent = `全${totalSectionQuestions}問`;
   
-  // 誤答数バッジの表示
   const badge = document.getElementById('q-incorrect-badge');
   if (currentQuestion.incorrectCount > 0) {
     badge.textContent = `過去の誤答: ${currentQuestion.incorrectCount}回`;
@@ -198,10 +195,8 @@ function handleAnswer(userSelectedTrue) {
   } else {
     resultCard.classList.add('incorrect');
     resultTitle.textContent = '間違い';
-    // 不正解の場合、ローカルの誤答数も即座に+1（リストに戻った時に即反映させるため）
     currentQuestion.incorrectCount += 1;
     
-    // UI上の最大誤答数も必要に応じて更新
     if (currentQuestion.incorrectCount > maxIncorrect) {
       maxIncorrect = currentQuestion.incorrectCount;
       buildFilterUI(); 
@@ -211,11 +206,9 @@ function handleAnswer(userSelectedTrue) {
   
   document.getElementById('explanation-text').innerHTML = parseMarkdown(currentQuestion.explanation);
 
-  // ログ送信キューに追加
   pendingLogs.push({ id: currentQuestion.id, isCorrect: isCorrect });
-  scheduleSync(); // 2秒後に自動送信
+  scheduleSync(); 
 
-  // 手動チェックボックスの復元
   const reviewCheck = document.getElementById('review-checkbox');
   reviewCheck.checked = currentQuestion.isChecked || false;
   reviewCheck.classList.remove('hidden');
@@ -230,21 +223,18 @@ function handleAnswer(userSelectedTrue) {
   }, 100);
 }
 
-// チェックボックス操作時
 document.getElementById('review-checkbox').onchange = (e) => {
   const checked = e.target.checked;
   currentQuestion.isChecked = checked;
   pendingChecks[currentQuestion.id] = checked;
-  scheduleSync(); // 2秒後に自動送信
+  scheduleSync(); 
 };
 
-// 連続操作の通信をまとめる処理
 function scheduleSync() {
   if (syncTimeout) clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(syncUpdates, 2000); // 操作から2秒間何もしなければ送信
+  syncTimeout = setTimeout(syncUpdates, 2000); 
 }
 
-// バックグラウンドでGASへ一括送信
 function syncUpdates() {
   if (Object.keys(pendingChecks).length === 0 && pendingLogs.length === 0) return;
 
@@ -253,13 +243,11 @@ function syncUpdates() {
     logs: [...pendingLogs]
   };
 
-  // 送信前にキューを空にする（エラー時は元に戻す）
   const backupChecks = { ...pendingChecks };
   const backupLogs = [...pendingLogs];
   pendingChecks = {};
   pendingLogs = [];
 
-  // keepalive: true でページが隠れても確実に送信を完了させる
   fetch(GAS_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
@@ -267,7 +255,6 @@ function syncUpdates() {
     keepalive: true 
   }).catch(err => {
     console.error('通信エラー:', err);
-    // 送信失敗時はキューに復元
     Object.assign(pendingChecks, backupChecks);
     pendingLogs.push(...backupLogs);
   });
