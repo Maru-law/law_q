@@ -30,7 +30,14 @@ function addFilterOption(select, value, label) { const option = document.createE
 function buildFilterUI() {
   const select = document.getElementById('question-filter'); select.innerHTML = '';
   addFilterOption(select, 'all', 'すべての問題'); addFilterOption(select, 'unanswered', '未回答の問題');
-  for (let percent = 0; percent <= 100; percent += 10) addFilterOption(select, `accuracy:${percent}`, `正答率 ${percent}%以下`);
+    const accuracyPercents = [...new Set(
+    allQuestions
+      .filter(question => question.answerCount > 0)
+      .map(question => formatAccuracy(question.accuracy))
+  )].sort((a, b) => b - a);
+  accuracyPercents.forEach(percent => {
+    addFilterOption(select, `accuracy:${percent}`, `正答率 ${percent}%以下`);
+  });
   select.value = currentFilter;
   select.onchange = event => { currentFilter = event.target.value; currentAccuracyLimit = currentFilter.startsWith('accuracy:') ? Number(currentFilter.split(':')[1]) / 100 : null; renderList(); };
 }
@@ -50,7 +57,7 @@ function renderList() {
     const group = document.createElement('section'); group.className = 'category-group';
     const title = document.createElement('h2'); title.className = 'category-title'; title.textContent = category; group.appendChild(title);
     const grid = document.createElement('div'); grid.className = 'year-grid';
-    Object.entries(years).forEach(([year, questions]) => { const button = document.createElement('button'); button.className = 'year-btn'; button.innerHTML = `<span>${escapeHtml(year)}</span><small>${questions.length}問</small>`; button.onclick = () => startQuiz(category, year, questions); grid.appendChild(button); });
+    Object.entries(years).forEach(([year, questions]) => { const button = document.createElement('button'); button.className = 'year-btn'; button.textContent = year; button.onclick = () => startQuiz(category, year, questions); grid.appendChild(button); });
     group.appendChild(grid); container.appendChild(group);
   });
 }
